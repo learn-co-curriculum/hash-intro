@@ -1,4 +1,4 @@
-## Hash Table
+## Hash Intro
 
 ### Objectives 
 
@@ -24,18 +24,17 @@ hash['other']
 Arrays are very good at looking up elements at a specific index.  So for example, if we want to find the element in the third slot we can access that array.  Now, this works quite well if you have an array of student gpas in descending order and you are asked, 'What is the third highest gpa in a high school class'.  We can answer this question in linear time.
 
 ```javascript 
-	let gpas = [3.9, 3.2, 2.1, 1.3]
-	gpas[2]
-	// 2.1
+let gpas = [3.9, 3.2, 2.1, 1.3]
+gpas[2]
+// 2.1
 ```
 
 However, what when we want to see if a person with a given name is in a high school class.  Now, we can no longer answer the question in linear time.  Instead, we would have to look through some of the elements, perhaps by employing binary search.  This takes O(log n) time, as binary search has us cut the sorted array in half with each attempt until we find the matching elements.  So is O(log n) the fastest way for us to see if an element is in an array.
 
 ```javascript 
-	let students = ['Alex', 'Ian', 'Johann', 'Leigh', 'Sam', 'Steven']
-	binarySearch(students, 'Leigh')
-	// true
-
+let students = ['Alex', 'Ian', 'Johann', 'Leigh', 'Sam', 'Steven']
+binarySearch(students, 'Leigh')
+// true
 ```
 
 ##### A Better Way
