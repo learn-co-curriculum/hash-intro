@@ -1,118 +1,52 @@
 ## Hash Table
 
 ### Objectives 
-* Learn the benefits of using a hash table over arrays and linked lists.
-* Learn the components of a hash table.
-* Learn about collisions and how to resolve them.
-* Learn about the attributes of a good hash function. 
 
-### Review
+- What hashes are good for
 
-Previously we have talked about arrays and linked lists.   	
+### What is a hash 
 
-##### Arrays 
+A hash is a data structure that supports key-based lookup.  This means that given a key, it retrieves a value.  If there is no key, then you know that nothing has been stored at that number.    
 
-Remember that with arrays we store elements contiguously in memory.  This means that each element is evenly spaced in memory from the next one.   Because of this, when we initialize a new array also must allocate a fixed amount of space in memory to store the array, and when the array runs out of space, we need to copy over the elements into a different spot.  
-
-However, the benefit of using an array is that because each element is in a predictable location, we can determine where to access an element at a specific index in the array and therefore can retrieve elements in constant time.
+```javascript
+let hash = {foo: 'bar'}
+hash['foo']
+	// bar
 	
-##### Linked Lists 
+hash['other']
+	// undefined
 
-Elements in a linked list are not contiguous in memory - instead we can store an element anywhere in memory, with each element having a pointer that tells us the location of the next element.  The benefit of this is that we can our linked lists can continue to grow in size and we will not run out of space.  But the price paid for dynamic size is that to access an element, we need to follow the pointers from node to node, which makes the time to retrieve an element is O(n).
+```
+### Why Hashes 
 
-##### The Goal
+##### The problem with arrays 
 
-Our goal is to have a mechanism that allows to predict precisely where a piece of data is (like we can with an array), while still allowing our data structure to grow (like we can with a hash).
+Arrays are very good at looking up elements at a specific index.  So for example, if we want to find the element in the third slot we can access that array.  Now, this works quite well if you have an array of student gpas in descending order and you are asked, 'What is the third highest gpa in a high school class'.  We can answer this question in linear time.
 
-### Hash Tables
+```javascript 
+	let gpas = [3.9, 3.2, 2.1, 1.3]
+	gpas[2]
+	// 2.1
+```
 
-A hash table is an array where we place the element in a specific location based on data from that element and a function.  So we use the **hash function** to determine where exactly to store a given key.  Later, use the same hash function to determine where to search for a given key.
+However, what when we want to see if a person with a given name is in a high school class.  Now, we can no longer answer the question in linear time.  Instead, we would have to look through some of the elements, perhaps by employing binary search.  This takes O(log n) time, as binary search has us cut the sorted array in half with each attempt until we find the matching elements.  So is O(log n) the fastest way for us to see if an element is in an array.
 
-Let's try this with an example.  Imagine we would like to use our hash table to store a collection of books.  We'll determine at which index to place the book by using the first number of each section of the Dewey Decimal System, which we conveniently have below.
+```javascript 
+	let students = ['Alex', 'Ian', 'Johann', 'Leigh', 'Sam', 'Steven']
+	binarySearch(students, 'Leigh')
+	// true
 
-![](https://s3-us-west-2.amazonaws.com/curriculum-content/algorithms/dewey-decimal-arrangement.jpg)
+```
 
-We have the following books: *The Bible*, *Alexander Hamilton*, *Introduction to Physics*, and *War and Peace*.  Based on our hash function, we store the books in the following locations:
+##### A Better Way
 
-| Index        |Book           |
-| ------------- |:-------------:|
-| 000 |  |
-| 100 |  |
-| 200 | *The Bible*|
-| 300 | |
-| 400 | |
-| 500 | *Introduction to Physics*|
-| 600 | |
-| 700 | |
-| 800 | *War and Peace* |
-| 900 | *Alexander Hamilton*|
+Well, maybe on second thought, there is a way.  Maybe the way to determine if an element is in an array is to pre-assign a name to a given slot.  For example, if the name Bob is in an array, it must be in the second slot.  The name Fred must be in the fifth slot.  Now, as you may notice a coupled of things.
 
-So now when we need to retrieve a book, we do not need to look through every index to find our books, instead we just look at the place of the book based on the Dewey Decimal System. 
+1. First, with a large high school class, there will be too many names to simply remember precisely the index for each name.  Instead, we likely need some **formula** to know precisely where to find a given name.
+2.  Second, once we present this key to our formula, and it tells us the index to examine, note that we could store whatever we want in the index.  For example, say that someone with the name Bob is always found in the third slot of the array.  We can store his gpa, or his telephone number, or whatever we want there.  That means that there bob is there, and he has the associated data that's in the slot.  To represent nothing there is no bob, we simply have nothing in the slot.  The cost of this is O(1), as once we know exactly where to look, finding the right element is not dependent on the number of elements in the collection.
 
-![](http://i2.cdn.cnn.com/cnnnext/dam/assets/131126190621-geroge-peabody-library-horizontal-large-gallery.jpg)
-> A massive library
-
-So we use our formula to tell us both where to insert a book, and also where to look to retrieve a book.  If someone asks us if *Eloquent Javascript* is in our hash table, we simply visit our index at location 600, see that nothing is there, and can confidently reply that the book is not located there.  Note that the indices are not necessarily contiguous, as they are in an array, but because our formula tells us exactly where to place a book, and also where to retrieve a book we are able to retrieve and insert an element in constant time.
-
-So with a hash table, we look at the data in our element, run it through our hash function to determine where to place the element, and because the hash function does not rely on our elements being evenly spaced apart, we do not need to allocate a contiguous chunk of memory for our hash table.  So we achieve our goal of constant time for inserting and retrieving elements while having a data structure that can grow. 
-
- 
-#### The Problem: Collision
-
-Our hash table currently looks like the following: 
-
-| Index        |Book           |
-| ------------- |:-------------:|
-| 000 |  |
-| 100 |  |
-| 200 | *The Bible*|
-| 300 | |
-| 400 | |
-| 500 | *Introduction to Physics*|
-| 600 | |
-| 700 | |
-| 800 | *War and Peace* |
-| 900 | *Alexander Hamilton*|
-
-Now what happens if we need to store another book, this time *Introduction to Biology*.  Well, our Dewey Decimal System tells us to store the key at the location with index 500.  The only problem is that the slot is already filled.  We have just encountered a **collision**.  A collision is where our hash function outputs a value that already is occupied in our hash table.  
-
-To handle our collision we apply separate chaining.  With separate chaining, each index points to a linked list.  So in our example above we could place both *Introduction to Physics* and *Introduction to Biology* in the place linked list is located at index 500.  Applying the separate chaining technique, our hash table will look like the following:  
-
-| Index        |Book           |
-| ------------- |:-------------:|
-| 000 |  |
-| 100 |  |
-| 200 | [ "*The Bible*" ]|
-| 300 | |
-| 400 | |
-| 500 | [ "*Introduction to Physics*", "*Introduction to Biology*" ]|
-| 600 | |
-| 700 | |
-| 800 | [ "*War and Peace*" ]|
-| 900 | [ "*Alexander Hamilton*" ]|
-
-Note that in the worse case scenario, all of our inserted elements collide and we have to traverse a linked list of length n to retrieve an element, so we have O(n).  However, on average collisions do not occur, so we retrieve constant time for lookup, insertion and deletion *on average*.  
-
-### Choosing a good hash function
-
-So choose a hash function that minimizes the chance of a collision occurring.  Some properties of a good hash function. 
-
-1. Makes use of all information provided by a given key to maximize the number of possible hash values.  So books of two different titles should map to two different values. 
-2. Our hash function should produce a hash value that is distributed evenly across the table, which avoids long linked lists at certain keys.
-3. Maps similar keys to very different values - making collisions much less likely.
-4. Also hash function called frequently so should employ simple and quick introductions.  
+That my friends, is a hash: key value pairs, and a formula to tell us given a key, where to find the associated data.  We'll explore these same concepts in more detail in the next section.
 
 ### Summary
 
-In this function we learned about hash tables.  Hash tables place the value of an element into a hash function which outputs a hash value.  The hash value determines where to place the element.  Because a hash function produces the same hash value for a given element, it also gives us fast lookup time to retrieve an element.  
-
-When a hash function ouputs the same hash value for two different elements we have a collision.  We can resolve a collision by employing separate chaining where each hash value points to a linked list, and when there is a collision we attach the element to the linked list.  
-
-Because retrieving elements from a linked list is O(n), we try to choose a hash function that avoids collisions.  Because we must use our hash function to insert, delete, and retrieve elements we also choose a fast hash function.
-
-
-
-	
- 
-
-
+Arrays provide a lot of use to us.  However, where they really shine is with ordered elements.  There is a slight quibble with arrays, which is that finding whether an element is in an array has us resort to binary search which occurs in O(log n) time.  Hashes allow us to see if something is in our collection of O(1) time, and we can look up an element by a key that maps to a precise location.  
